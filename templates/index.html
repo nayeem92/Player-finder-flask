@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Cluster Analysis</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index-styles.css') }}">
+    <script>
+        // Define a variable for player names
+        let playerNames = [];
+
+        // Function to fetch player names from the server
+        async function fetchPlayerNames() {
+            const response = await fetch('/get_player_names');
+            playerNames = await response.json();
+        }
+
+        // Function to show suggestions
+        function showSuggestions(input) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = '';
+
+            const filteredNames = playerNames.filter(name => name.toLowerCase().includes(input.toLowerCase()));
+            filteredNames.forEach(name => {
+                const suggestion = document.createElement('div');
+                suggestion.textContent = name;
+                suggestion.addEventListener('click', () => {
+                    document.getElementById('player_name').value = name;
+                    suggestionsDiv.innerHTML = '';
+                });
+                suggestionsDiv.appendChild(suggestion);
+            });
+        }
+
+        // Fetch player names when the page loads
+        window.onload = fetchPlayerNames;
+    </script>
+</head>
+<body>
+    <h1>Player Cluster Analysis</h1>
+    <p>Enter a player's name to get their cluster information:</p>
+    <form action="/predict" method="post">
+        <label for="player_name">Player's Name:</label>
+        <input type="text" id="player_name" name="player_name" oninput="showSuggestions(this.value)" required>
+        <div id="suggestions"></div>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
