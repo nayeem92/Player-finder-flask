@@ -34,16 +34,29 @@
 
         // Fetch player names when the page loads
         window.onload = fetchPlayerNames;
+
+        // Function to show loading screen
+        function showLoading() {
+            const loadingContainer = document.getElementById('loading-container');
+            loadingContainer.style.display = 'block';
+        }
     </script>
 </head>
 <body>
-    <h1>Player Cluster Analysis</h1>
-    <p>Enter a player's name to get their cluster information:</p>
-    <form action="/predict" method="post">
-        <label for="player_name">Player's Name:</label>
-        <input type="text" id="player_name" name="player_name" oninput="showSuggestions(this.value)" required>
-        <div id="suggestions"></div>
-        <button type="submit">Submit</button>
-    </form>
+    <div id="loading-container" style="display: none;">
+        <img src="{{ url_for('static', filename='loading.gif') }}" alt="Loading" id="loading-icon">
+        <p id="loading-message">Running Model...</p>
+    </div>
+
+    <div id="content-container">
+        <h1>EPL 2022-23 Cluster Analysis</h1>
+        <!-- <p>Enter a player's name to get their cluster information:</p> -->
+        <form action="/predict" method="post" onsubmit="showLoading()">
+            <label for="player_name">Player's Name:</label>
+            <input type="text" id="player_name" name="player_name" oninput="showSuggestions(this.value)" required>
+            <div id="suggestions"></div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 </body>
 </html>

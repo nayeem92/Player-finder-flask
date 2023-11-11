@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify 
+from flask import Flask, request, render_template, jsonify
 import pandas as pd
 import plotly.graph_objects as go
 import os
@@ -6,8 +6,11 @@ import joblib
 
 app = Flask(__name__)
 
+# CSV file path
+csv_path = "data/filtered_data.csv"
+
 # Load your filtered data
-new_df = pd.read_csv("data/filtered_data.csv")
+new_df = pd.read_csv(csv_path)
 
 # Set OMP_NUM_THREADS to 1 to avoid memory leak with K-Means and MKL
 os.environ['OMP_NUM_THREADS'] = '1'
@@ -15,13 +18,35 @@ os.environ['OMP_NUM_THREADS'] = '1'
 # Load the saved K-Means model
 kmeans = joblib.load('kmeans_model.pkl')
 
-def get_cluster_info(player_name, data_frame):
+def update_clusters(data_frame, kmeans_model):
+    # Extract relevant features for clustering
+    sca_features = ['Pass SCA Ratio', 'Deadball SCA Ratio', 'Dribble SCA Ratio', 'Shot SCA Ratio', 'Fouls Drawn SCA Ratio', 'Defense SCA Ratio']
+    features = data_frame[sca_features]
+
+    # Predict clusters using the pre-trained K-means model
+    clusters = kmeans_model.predict(features)
+
+    # Update the 'Cluster' column in the DataFrame
+    data_frame['Cluster'] = clusters
+
+    # Save the updated DataFrame back to the CSV file
+    data_frame.to_csv(csv_path, index=False)
+
+def get_cluster_info(player_name, data_frame, kmeans_model):
+    # Update the clusters before getting cluster info
+    update_clusters(data_frame, kmeans_model)
+
     try:
         player_data = data_frame[data_frame['Player'] == player_name]
         if player_data.empty:
-            return "Player not found"
+            return "Player not found", None, None
 
-        cluster_number = player_data['Cluster'].values[0]
+        # Extract relevant features for clustering (using the specified features)
+        sca_features = ['Pass SCA Ratio', 'Deadball SCA Ratio', 'Dribble SCA Ratio', 'Shot SCA Ratio', 'Fouls Drawn SCA Ratio', 'Defense SCA Ratio']
+        player_features = player_data[sca_features]
+
+        # Predict the cluster for the player using the pre-trained model
+        cluster_number = kmeans_model.predict(player_features)[0]
 
         # Create a scatter plot for the player's cluster
         cluster_data = data_frame[data_frame['Cluster'] == cluster_number]
@@ -73,7 +98,7 @@ def get_cluster_info(player_name, data_frame):
         # Show the scatter plot
         return f"{player_name} is in cluster {cluster_number}", fig.to_html(), other_player_names
     except IndexError:
-        return "Player not found", None
+        return "Player not found", None, None
 
 @app.route('/')
 def home():
@@ -83,7 +108,10 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     player_name = request.form['player_name']
-    result, plot_html, other_players = get_cluster_info(player_name, new_df)
+
+    # Get cluster information for the specified player
+    result, plot_html, other_players = get_cluster_info(player_name, new_df, kmeans)
+
     return render_template('result.html', result=result, plot_html=plot_html, other_players=other_players)
 
 @app.route('/get_player_names', methods=['GET'])
