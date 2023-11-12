@@ -9,6 +9,11 @@ app = Flask(__name__)
 # CSV file path
 csv_path = "data/filtered_data.csv"
 
+# Load 'general.csv' data
+general_csv_path = "data/general.csv"
+general_data = pd.read_csv(general_csv_path)
+
+
 # Load your filtered data
 new_df = pd.read_csv(csv_path)
 
@@ -112,7 +117,9 @@ def predict():
     # Get cluster information for the specified player
     result, plot_html, other_players = get_cluster_info(player_name, new_df, kmeans)
 
-    return render_template('result.html', result=result, plot_html=plot_html, other_players=other_players)
+    # Pass general data to the template
+    return render_template('result.html', result=result, plot_html=plot_html, other_players=other_players, general_data=general_data)
+
 
 @app.route('/get_player_names', methods=['GET'])
 def get_player_names():

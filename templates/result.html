@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css')}}">
-
     <title>Result - Player Cluster Analysis</title>
 </head>
 <body>
+<div class="container">
     <h1>Player Cluster Analysis</h1>
     <p>{{ result }}</p>
-    
+
     <h2>Similar Players</h2>
+</div>
     <div class="player-grid">
         {% if other_players %}
             {% for player in other_players %}
@@ -23,8 +24,95 @@
     </div>
 
     {% if plot_html %}
-    <div>{{ plot_html|safe }}</div>
+        <div>{{ plot_html|safe }}</div>
     {% endif %}
+<div class="result">
+    <!-- Nation,Pos,Squad,Age,Born,MP,Starts,Min,90s,Gls,Ast,G+A,G-PK,PK,PKatt,CrdY,CrdR,xG,npxG,xAG,npxG+xAG,PrgC,PrgP,PrgR,Gls,Ast,G+A,G-PK,G+A-PK,xG,xAG,xG+xAG,npxG,npxG+xAG -->
+    <h2>Current season stats of the players above</h2>
+</div>
+<button id="expandButton">Expand Table</button>
+<button id="undoExpandButton" style="display: none;">Compress</button>
+<div class="expandable-table">
+    <!-- Your table goes here -->
+    {% if other_players %}
+        <table border="1">
+            <tr>
+                <th class="sticky-header">Player</th>
+                <!-- Add all columns from the 'general.csv' here -->
+                <th class="sticky-header">Nationality</th>
+                <th class="sticky-header">Position</th>
+                <th class="sticky-header">Squad</th>
+                <th class="sticky-header">Current Age</th>
+                <th class="sticky-header">Minutes Played</th>
+                <th class="sticky-header">90s Played</th>
+                <th class="sticky-header">Goals</th>
+                <th class="sticky-header">Assists</th>
+                <th class="sticky-header">Goals + Assists</th>
+                <th class="sticky-header">Non-Penalty Goals</th>
+                <th class="sticky-header">Penalty Kicks Made</th>
+                <th class="sticky-header">Penalty Kicks Attempted</th>
+                <th class="sticky-header">Yellow Cards</th>
+                <th class="sticky-header">Red Cards</th>
+                <th class="sticky-header">Expected Goals (xG)</th>
+                <th class="sticky-header">Non-Penalty Expected Goals (npxG)</th>
+                <th class="sticky-header">Expected Assisted Goals (xAG)</th>
+                <th class="sticky-header">Non-Penalty Expected Goals plus Assisted Goals (npxG+xAG)</th>
+                <th class="sticky-header">Progressive Carries</th>
+                <th class="sticky-header">Progressive Passes</th>
+                <th class="sticky-header">Progressive Passes Received</th>
+                <!-- Add more columns as needed -->
+            </tr>
+            {% for player_name in other_players %}
+                <tr>
+                    <td>{{ player_name }}</td>
+                    <!-- Load information from 'general.csv' using player_name -->
+                    {% for _, row in general_data[general_data['Player'] == player_name].iterrows() %}
+                        <!-- Add all columns from the 'general.csv' here -->
+                        <td>{{ row['Nation'] }}</td>
+                        <td>{{ row['Pos'] }}</td>
+                        <td>{{ row['Squad'] }}</td>
+                        <td>{{ row['Age'] }}</td>
+                        <td>{{ row['Min'] }}</td>
+                        <td>{{ row['90s'] }}</td>
+                        <td>{{ row['Gls'] }}</td>
+                        <td>{{ row['Ast'] }}</td>
+                        <td>{{ row['G+A'] }}</td>
+                        <td>{{ row['G-PK'] }}</td>
+                        <td>{{ row['PK'] }}</td>
+                        <td>{{ row['PKatt'] }}</td>
+                        <td>{{ row['CrdY'] }}</td>
+                        <td>{{ row['CrdR'] }}</td>
+                        <td>{{ row['xG'] }}</td>
+                        <td>{{ row['npxG'] }}</td>
+                        <td>{{ row['xAG'] }}</td>
+                        <td>{{ row['npxG+xAG'] }}</td>
+                        <td>{{ row['PrgC'] }}</td>
+                        <td>{{ row['PrgP'] }}</td>
+                        <td>{{ row['PrgR'] }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+</div>
+    {% else %}
+        <p>No other players in the same cluster</p>
+    {% endif %}
+
     <a href="/" class="go-back-button">Go back</a>
+    <script>
+        document.getElementById('expandButton').addEventListener('click', function() {
+            var table = document.querySelector('.expandable-table');
+            table.classList.add('expanded');
+            this.style.display = 'none'; // Hide the button after expanding the table
+            document.getElementById('undoExpandButton').style.display = 'inline-block';
+        });
+
+        document.getElementById('undoExpandButton').addEventListener('click', function() {
+            var table = document.querySelector('.expandable-table');
+            table.classList.remove('expanded');
+            document.getElementById('expandButton').style.display = 'inline-block';
+            this.style.display = 'none'; // Hide the button after undoing expand
+        });
+    </script>
 </body>
 </html>
